@@ -55,6 +55,12 @@ header p {
   color: #5a5a5a;
 }
 
+.tile-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .tile-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
@@ -64,12 +70,25 @@ header p {
 
 .tile {
   background: #f2efe7;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 12px;
+  padding: 6px;
   text-align: center;
   font-weight: 600;
   letter-spacing: 0.02em;
   border: 1px solid #e0dccf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile svg {
+  width: 56px;
+  height: 76px;
+}
+
+.tile--small svg {
+  width: 40px;
+  height: 56px;
 }
 
 .action-bar {
