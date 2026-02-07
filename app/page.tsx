@@ -103,18 +103,110 @@ const problems: Problem[] = [
   },
 ];
 
-const allTiles = ["m", "p", "s"];
+const allTiles = ["m", "p", "s"] as const;
+type Suit = (typeof allTiles)[number];
 
-const tileLabel = (tile: string) => {
-  if (tile.length === 1) {
-    return tile;
+const honorLabels: Record<string, string> = {
+  東: "東",
+  南: "南",
+  西: "西",
+  北: "北",
+  白: "白",
+  發: "發",
+  中: "中",
+};
+
+type TileParts = {
+  type: "honor" | "suited";
+  label: string;
+  number?: string;
+  suit?: Suit;
+};
+
+const parseTile = (tile: string): TileParts => {
+  if (tile.length === 1 && honorLabels[tile]) {
+    return { type: "honor", label: honorLabels[tile] };
   }
-  const suit = tile.slice(-1);
+  const suit = tile.slice(-1) as Suit;
   const number = tile.slice(0, -1);
   if (allTiles.includes(suit)) {
-    return `${number}${suit}`;
+    return { type: "suited", label: `${number}${suit}`, number, suit };
   }
-  return tile;
+  return { type: "honor", label: tile };
+};
+
+const suitIcon = (suit: Suit, accent: string) => {
+  if (suit === "p") {
+    return (
+      <>
+        <circle cx="30" cy="52" r="14" fill="none" stroke={accent} strokeWidth="3" />
+        <circle cx="30" cy="52" r="6" fill={accent} />
+      </>
+    );
+  }
+
+  if (suit === "s") {
+    return (
+      <>
+        <rect x="24" y="40" width="4" height="24" rx="2" fill={accent} />
+        <rect x="30" y="38" width="4" height="28" rx="2" fill={accent} />
+        <rect x="36" y="40" width="4" height="24" rx="2" fill={accent} />
+      </>
+    );
+  }
+
+  return (
+    <text
+      x="30"
+      y="58"
+      textAnchor="middle"
+      fontSize="22"
+      fontFamily='"Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif'
+      fill={accent}
+    >
+      萬
+    </text>
+  );
+};
+
+const MahjongTile = ({ tile, size = "regular" }: { tile: string; size?: "regular" | "small" }) => {
+  const parsed = parseTile(tile);
+  const accent = parsed.type === "suited" ? "#1f6b5e" : "#1f1f1f";
+  const numberColor = parsed.number === "5" ? "#c03232" : accent;
+
+  return (
+    <div className={`tile ${size === "small" ? "tile--small" : ""}`} aria-label={parsed.label}>
+      <svg viewBox="0 0 60 80" role="img" aria-hidden="true">
+        <rect x="2" y="2" width="56" height="76" rx="8" fill="#fffdf8" stroke="#1f1f1f" strokeWidth="2" />
+        {parsed.type === "honor" ? (
+          <text
+            x="30"
+            y="52"
+            textAnchor="middle"
+            fontSize="30"
+            fontFamily='"Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif'
+            fill={accent}
+          >
+            {parsed.label}
+          </text>
+        ) : (
+          <>
+            <text
+              x="30"
+              y="28"
+              textAnchor="middle"
+              fontSize="20"
+              fontFamily='"Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif'
+              fill={numberColor}
+            >
+              {parsed.number}
+            </text>
+            {parsed.suit && suitIcon(parsed.suit, accent)}
+          </>
+        )}
+      </svg>
+    </div>
+  );
 };
 
 export default function Home() {
@@ -148,13 +240,13 @@ export default function Home() {
           <span>{problem.title}</span>
           <span>問題 {progress}</span>
           <span>{problem.situation}</span>
-          <span>ドラ: {tileLabel(problem.dora)}</span>
+          <span className="tile-inline">
+            ドラ: <MahjongTile tile={problem.dora} size="small" />
+          </span>
         </div>
         <div className="tile-row">
           {problem.hand.map((tile, idx) => (
-            <div className="tile" key={`${tile}-${idx}`}>
-              {tileLabel(tile)}
-            </div>
+            <MahjongTile key={`${tile}-${idx}`} tile={tile} />
           ))}
         </div>
 
@@ -172,7 +264,9 @@ export default function Home() {
 
         {showAnswer && (
           <div className="answer-panel">
-            <strong>推奨の切り牌: {tileLabel(problem.expected)}</strong>
+            <strong className="tile-inline">
+              推奨の切り牌: <MahjongTile tile={problem.expected} size="small" />
+            </strong>
             <p>{problem.reason}</p>
             <ul>
               {problem.tips.map((tip) => (
