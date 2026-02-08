@@ -61,34 +61,94 @@ header p {
   gap: 8px;
 }
 
+/* ✅ 手牌行：gridを「固定幅タイル＋折り返し」に変更
+   以前の minmax(48px, 1fr) は 1fr で横に伸びるので巨大化しやすい */
 .tile-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin: 16px 0 8px;
+  align-items: flex-end;
 }
 
+/* ✅ 旧SVG前提の「箱」を軽くして、imgのサイズを邪魔しない */
 .tile {
-  background: #f2efe7;
-  border-radius: 12px;
-  padding: 6px;
-  text-align: center;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  border: 1px solid #e0dccf;
-  display: flex;
-  align-items: center;
+  background: transparent;     /* 牌画像自体に背景があるので不要 */
+  border: none;
+  padding: 0;
+  border-radius: 0;
+
+  display: inline-flex;
+  align-items: flex-end;
   justify-content: center;
+
+  line-height: 0;              /* imgの下の余白対策 */
 }
 
-.tile svg {
-  width: 56px;
-  height: 76px;
+/* ✅ 画像で表示する前提：tile内のimgをブロックにして自然拡縮 */
+.tile img {
+  display: block;
+  width: 100%;                 /* MahjongTile側のwrapper幅（widthPx）に追従 */
+  height: auto;
 }
 
-.tile--small svg {
-  width: 40px;
-  height: 56px;
+/* 小サイズ用：MahjongTile側で widthPx=32 等を渡す前提。
+   ここでは余計なスタイルは入れない（必要なら下で微調整） */
+.tile--small {
+  transform: translateY(0.5px);
+}
+
+/* ✅ MahjongTileコンポーネント側のベースクラス（ある前提）
+   stateオーバーレイ等に必要な最低限。クラス名が違うなら合わせてください */
+.mahjong-tile {
+  display: inline-block;
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.mahjong-tile > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+/* （任意）state表現：必要なら */
+.mahjong-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.mahjong-tile--hint::after {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.mahjong-tile--selected {
+  transform: translateY(-2px);
+}
+
+.mahjong-tile--selected::after {
+  opacity: 1;
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -2px;
+}
+
+.mahjong-tile--disabled {
+  filter: saturate(0.2) brightness(0.85);
+  opacity: 0.85;
+}
+
+.mahjong-tile--danger::after {
+  opacity: 1;
+  outline: 2px solid rgba(255, 80, 80, 0.9);
+  outline-offset: -2px;
 }
 
 .action-bar {
@@ -148,5 +208,10 @@ footer {
 
   .section {
     padding: 18px;
+  }
+
+  /* スマホは少し詰める */
+  .tile-row {
+    gap: 10px;
   }
 }
